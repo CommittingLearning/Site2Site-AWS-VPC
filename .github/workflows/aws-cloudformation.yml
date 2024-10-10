@@ -33,7 +33,7 @@ jobs:
         # Pre-deployment checks: CloudFormation template validation and plan
         - name: Validate Cloudformation Template
           run: |
-            aws cloudoformation validate-template --template-body file://template.yaml
+            aws cloudformation validate-template --template-body file://template.yaml
 
         # Security testing with CloudFormation Guard
         - name: Run CloudFormation Guard
@@ -70,7 +70,7 @@ jobs:
 
         # Manual approval before terraform apply
         - name: Manual Approval
-          uses: hmarr/auto-approve-actions@v2
+          uses: hmarr/auto-approve-action@v2
           with:
             github-token: ${{ secrets.GITHUB_TOKEN }}
 
