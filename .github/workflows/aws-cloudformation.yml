@@ -3,91 +3,115 @@ name: AWS Cloudformation CI/CD Pipeline
 # Only run on pull requests (for code validation and testing)
 # and on pushes to development and production (for full deployment)
 on:
-    pull_request:
-        branches:
-            - development
-            - production
-            - testing
-    push:
-        branches:
-            - development
-            - production
+  pull_request:
+    branches:
+      - development
+      - production
+      - testing
+  push:
+    branches:
+      - development
+      - production
+
+permissions:
+  id-token: write
+  contents: read
+  issues: write
 
 jobs:
-    validate-and-test:
-        runs-on: ubuntu-latest
-        permissions:
-          id-token: write
-          contents: read
+  validate-and-test:
+    runs-on: ubuntu-latest
 
-        steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-        - name: Configure AWS credentials
-          uses: aws-actions/configure-aws-credentials@v3
-          with:
-            role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-            aws-region: us-west-2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-west-2
 
-        # Pre-deployment checks: CloudFormation template validation and plan
-        - name: Validate Cloudformation Template
-          run: |
-            aws cloudformation validate-template --template-body file://template.yaml
+      # Pre-deployment checks: CloudFormation template validation and plan
+      - name: Validate Cloudformation Template
+        run: |
+          aws cloudformation validate-template --template-body file://template.yaml
 
-        # Security testing with CloudFormation Guard
-        - name: Run CloudFormation Guard
-          run: |
-            cfn-guard validate --rules.guard --template template.yaml  
+      # Install Cloudformation Guard
+      - name: Install Cloudformation Guard
+        run: |
+          curl -LO https://github.com/aws-cloudformation/cloudformation-guard/releases/latest/download/cfn-guard-linux \
+          && chmod +x cfn-guard-linux \
+          && sudo mv cfn-guard-linux /usr/local/bin/cfn-guard
+
+      # Security testing with CloudFormation Guard
+      - name: Run CloudFormation Guard
+        run: |
+          cfn-guard validate --rules rules.guard --template template.yaml
+
+      # Skip applying changes in pull requests
+      - name: Skip Apply in Pull Requests
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Skipping apply since this is a pull request validation."
+          exit 0
+
+  deploy:
+    needs: validate-and-test
+    runs-on: ubuntu-latest
+    # Runs only on push events
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-west-2
+
+      # Set environment variable based on branch
+      - name: Set environment variable based on branch
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/development" ]]; then
+            echo "ENVIRONMENT=development" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/production" ]]; then
+            echo "ENVIRONMENT=production" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=default" >> $GITHUB_ENV
+          fi
+
+      # Pause and wait for manual approval
+      - name: Manual Approval before Apply
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.github_TOKEN }}
+          approvers: CommittingLearning
+          issue-title: "Deploying Cloudformation stack to provision services in the ${{ env.ENVIRONMENT }} environment"
+          issue-body: "Please approve or deny the deployment"
+
+      # Apply changes after approval
+      - name: Deploy CloudFormation Stack
+        run: |
+          aws cloudformation deploy \
+            --template-file template.yaml \
+            --parameter-overrides Environment=${{ env.ENVIRONMENT }} \
+            --stack-name VPC-Stack-${{ env.ENVIRONMENT }} \
+            --capabilities CAPABILITY_IAM
 
         # Unit & integration tests using AWS CLI
-        - name: Run AWS CLI Tests
-          run: |
-            aws cloudformation describe-stacks --stack-name test-stack
+      - name: Run AWS CLI Tests
+        run: |
+          aws cloudformation describe-stacks --stack-name VPC-Stack-${{ env.ENVIRONMENT }}
 
-        # Skip applying changes in pull requests
-        - name: Skip Apply in Pull Requests
-          if: github.event_name == 'pull_request'
-          run: |
-            echo "Skipping apply since this is a pull request validation."
-            exit 0
+      # Wait for 15 mins and destroy resources
+      - name: Wait for demonstration period
+        run: sleep 900
 
-    deploy:
-        needs: validate-and-test
-        runs-on: ubuntu-latest
-        # Runs only on push events
-        if: github.event_name != 'pull_request'
-
-        steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
-
-        - name: Configure AWS credentials
-          uses: aws-actions/configure-aws-credentials@v1
-          with:
-            role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-            aws-region: us-west-2
-
-        # Manual approval before terraform apply
-        - name: Manual Approval
-          uses: hmarr/auto-approve-action@v2
-          with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-
-        # Apply changes after approval
-        - name: Deploy CloudFormation Stack
-          run: |
-            aws cloudformation deploy \
-              --template-file template.yampl \
-              --stack-name ${{ github.ref_name }}-stack \
-              --capabilities CAPABILITY_IAM
-
-        # Wait for 1 hour and destroy resources
-        - name: Wait for demonstration period
-          run: sleep 3600
-
-        # Destroy resources to avoid unnecessary costs
-        - name: Delete CloudFormation Stack
-          run: |
-            aws cloudformation delete-stack --stack-name ${{ github.ref_name }}-stack
-            aws cloudformation wait stack-delete-complete --stack-name ${{ github.ref_name }}-stack
+      # Destroy resources to avoid unnecessary costs
+      - name: Delete CloudFormation Stack
+        run: |
+          aws cloudformation delete-stack --stack-name VPC-Stack-${{ env.ENVIRONMENT }}
+          aws cloudformation wait stack-delete-complete --stack-name VPC-Stack-${{ env.ENVIRONMENT }}
