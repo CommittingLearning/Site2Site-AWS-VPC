@@ -38,19 +38,15 @@ jobs:
           aws cloudformation validate-template --template-body file://template.yaml
 
       # Install Homebrew and CloudFormation Guard
-      - name: Install Homebrew and CloudFormation Guard
+      - name: CloudFormation Guard
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential curl file git
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/runner/.bash_profile
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install cfn-guard
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/aws-cloudformation/cloudformation-guard/main/install-guard.sh | sh
+          export PATH=~/.guard/bin:$PATH
 
       # Verify CloudFormation Guard installation
       - name: Verify CloudFormation Guard Installation
         run: |
-          cfn-guard version
+          cfn-guard --version
 
       # Security testing with CloudFormation Guard
       - name: Run CloudFormation Guard
