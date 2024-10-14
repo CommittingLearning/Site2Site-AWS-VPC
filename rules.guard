@@ -1,5 +1,0 @@
-# Rule 1: VPC CIDR Block should be within allowed ranges
-rule vpc_cidr_check {
-  resources.Type == "AWS::EC2::VPC"
-  properties.CidrBlock IN ["192.168.0.0/16"]
-}

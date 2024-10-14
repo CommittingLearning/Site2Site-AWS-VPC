@@ -96,7 +96,7 @@ jobs:
             --stack-name VPC-Stack-${{ env.ENVIRONMENT }} \
             --capabilities CAPABILITY_IAM
 
-        # Unit & integration tests using AWS CLI
+      # Describing Information about the Deployment
       - name: Run AWS CLI Tests
         run: |
           aws cloudformation describe-stacks --stack-name VPC-Stack-${{ env.ENVIRONMENT }}
