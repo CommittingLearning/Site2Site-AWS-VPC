@@ -38,11 +38,17 @@ jobs:
           aws cloudformation validate-template --template-body file://template.yaml
 
       # Install Cloudformation Guard
-      - name: Install Cloudformation Guard
+      - name: Install CloudFormation Guard
         run: |
           curl -LO https://github.com/aws-cloudformation/cloudformation-guard/releases/latest/download/cfn-guard-linux \
           && chmod +x cfn-guard-linux \
-          && sudo mv cfn-guard-linux /usr/local/bin/cfn-guard
+          && sudo mv cfn-guard-linux /usr/local/bin/cfn-guard \
+          && sudo ln -s /usr/local/bin/cfn-guard /usr/bin/cfn-guard
+
+      # Verify CloudFormation Guard installation
+      - name: Verify CloudFormation Guard Installation
+        run: |
+          cfn-guard version
 
       # Security testing with CloudFormation Guard
       - name: Run CloudFormation Guard
