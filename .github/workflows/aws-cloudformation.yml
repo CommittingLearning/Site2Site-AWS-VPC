@@ -37,11 +37,12 @@ jobs:
         run: |
           aws cloudformation validate-template --template-body file://template.yaml
 
-      # Install Homebrew and CloudFormation Guard
-      - name: CloudFormation Guard
+      # Install CloudFormation Guard using AWS-recommended method
+      - name: Install CloudFormation Guard
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/aws-cloudformation/cloudformation-guard/main/install-guard.sh | sh
-          export PATH=~/.guard/bin:$PATH
+          echo "export PATH=\$HOME/.guard/bin:\$PATH" >> $GITHUB_ENV
+          echo "Guard installed and PATH set."
 
       # Verify CloudFormation Guard installation
       - name: Verify CloudFormation Guard Installation
