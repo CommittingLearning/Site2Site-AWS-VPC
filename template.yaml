@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create a VPC with one subnet for an EC2 instance, named based on the environment.
+
+Parameters:
+  Environment:
+    Type: String
+    Description: The environment name (e.g., development, production)
+    AllowedValues:
+      - development
+      - production
+      - default
+    
+  VpcCIDR:
+    Type: String
+    Description: The IP Address range of this VPC
+    Default: '192.168.0.0/16'
+
+  EC2SubnetName:
+    Type: String
+    Description: Name of the Subnet hosting the EC2 instance.
+    Default: EC2Subnet
+  
+  EC2SubnetCIDR:
+    Type: String
+    Description: The IP Address range of the subnet that hosts the EC2 instance.
+    Default: '192.168.1.0/24'
+
+  EC2SubnetAZ:
+    Type: String
+    Description: Availability Zone of the EC2 Subnet.
+    Default: 'us-west-2a'
+
+Resources:
+  
+  #Create VPC with dynamic name based on the environment
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub 'VPC_${Environment}'
+        - Key: Environment
+          Value: !Ref Environment 
+
+  # Create a Subnet inside the VPC
+  MySubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: !Ref EC2SubnetCIDR
+      AvailabilityZone: !Ref EC2SubnetAZ
+      Tags:
+        - Key: Name
+          Value: !Ref EC2SubnetName
+        - Key: Environment
+          Value: !Ref Environment
+
+Outputs:
+  VpcId:
+    Description: 'The ID of the created VPC'
+    Value: !Ref MyVPC
+  SubnetId:
+    Description: 'The ID of the created Subnet'
+    Value: !Ref MySubnet
