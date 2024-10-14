@@ -37,22 +37,12 @@ jobs:
         run: |
           aws cloudformation validate-template --template-body file://template.yaml
 
-      # Install CloudFormation Guard using AWS-recommended method
-      - name: Install CloudFormation Guard
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/aws-cloudformation/cloudformation-guard/main/install-guard.sh | sh
-          echo "export PATH=\$HOME/.guard/bin:\$PATH" >> $GITHUB_ENV
-          echo "Guard installed and PATH set."
-
-      # Verify CloudFormation Guard installation
-      - name: Verify CloudFormation Guard Installation
-        run: |
-          cfn-guard --version
-
-      # Security testing with CloudFormation Guard
+      # Run CloudFormation Guard using Guard-Action
       - name: Run CloudFormation Guard
-        run: |
-          cfn-guard validate --rules rules.guard --template template.yaml
+        uses: grolston/guard-action@main
+        with:
+          data_directory: './'
+          rule_set: "cis-aws-benchmark-level-1"
 
       # Skip applying changes in pull requests
       - name: Skip Apply in Pull Requests
