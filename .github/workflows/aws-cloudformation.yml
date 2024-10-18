@@ -93,7 +93,7 @@ jobs:
       # Apply changes after approval
       - name: Upload CloudFormation Template to S3
         run: |
-          aws s3 cp template.yaml ${{ env.S3_BUCKET }}vpc-template.yaml
+          aws s3 cp template.yaml ${{ env.S3_BUCKET }}vpc-${{ env.ENVIRONMENT }}-template.yaml
 
       # Trigger Parent Stack Deployment via Webhooks
       - name: Trigger Parent Stack Deployment
