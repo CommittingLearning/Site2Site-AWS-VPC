@@ -51,7 +51,7 @@ jobs:
           echo "Skipping apply since this is a pull request validation."
           exit 0
 
-  deploy:
+  upload-and-trigger:
     needs: validate-and-test
     runs-on: ubuntu-latest
     # Runs only on push events
@@ -72,10 +72,13 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/development" ]]; then
             echo "ENVIRONMENT=development" >> $GITHUB_ENV
+            echo "S3_BUCKET=s3://s2s-ts101-cftemplates-development-164953329762/" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/production" ]]; then
             echo "ENVIRONMENT=production" >> $GITHUB_ENV
+            echo "S3_BUCKET=s3://s2s-ts101-cftemplates-production-164953329762/" >> $GITHUB_ENV
           else
             echo "ENVIRONMENT=default" >> $GITHUB_ENV
+            echo "S3_BUCKET=s3://s2s-ts101-cftemplates-default-164953329762/" >> $GITHUB_ENV
           fi
 
       # Pause and wait for manual approval
@@ -84,29 +87,19 @@ jobs:
         with:
           secret: ${{ secrets.github_TOKEN }}
           approvers: CommittingLearning
-          issue-title: "Deploying Cloudformation stack to provision services in the ${{ env.ENVIRONMENT }} environment"
-          issue-body: "Please approve or deny the deployment"
+          issue-title: "Uploading CloudFormation template in the s2s-ts101-cftemplates-${{ env.ENVIRONMENT }} S3 bucket"
+          issue-body: "Please approve or deny the Upload"
 
       # Apply changes after approval
-      - name: Deploy CloudFormation Stack
+      - name: Upload CloudFormation Template to S3
         run: |
-          aws cloudformation deploy \
-            --template-file template.yaml \
-            --parameter-overrides Environment=${{ env.ENVIRONMENT }} \
-            --stack-name VPC-Stack-${{ env.ENVIRONMENT }} \
-            --capabilities CAPABILITY_IAM
+          aws s3 cp template.yaml ${{ env.S3_BUCKET }}vpc-template.yaml
 
-      # Describing Information about the Deployment
-      - name: Run AWS CLI Tests
+      # Trigger Parent Stack Deployment via Webhooks
+      - name: Trigger Parent Stack Deployment
         run: |
-          aws cloudformation describe-stacks --stack-name VPC-Stack-${{ env.ENVIRONMENT }}
-
-      # Wait for 15 mins and destroy resources
-      - name: Wait for demonstration period
-        run: sleep 900
-
-      # Destroy resources to avoid unnecessary costs
-      - name: Delete CloudFormation Stack
-        run: |
-          aws cloudformation delete-stack --stack-name VPC-Stack-${{ env.ENVIRONMENT }}
-          aws cloudformation wait stack-delete-complete --stack-name VPC-Stack-${{ env.ENVIRONMENT }}
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.TOKEN_PARENT_TRIGGER }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/CommittingLearning/Site2Site-AWS-ParentStack/dispatches \
+            -d '{"event_type":"trigger-parent-stack", "client_payload": {"ref": "${{ github.ref }}"}}'
