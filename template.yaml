@@ -65,7 +65,6 @@ Resources:
   # Add a Route to the VPN Gateway
   RouteToVGW:
     Type: AWS::EC2::Route
-    DependsOn: VGW
     Properties:
       RouteTableId: !Ref RouteTable
       DestinationCidrBlock: '0.0.0.0/0'

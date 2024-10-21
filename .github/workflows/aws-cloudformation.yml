@@ -31,7 +31,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: us-west-2
-          
+
       # Run CloudFormation Guard using Guard-Action
       - name: Run CloudFormation Guard
         uses: grolston/guard-action@main
@@ -75,6 +75,12 @@ jobs:
             echo "ENVIRONMENT=default" >> $GITHUB_ENV
             echo "S3_BUCKET=s3://s2s-ts101-cftemplates-default-164953329762/" >> $GITHUB_ENV
           fi
+
+      # CloudFormation Validate Step
+      - name: Validate CloudFormation template
+        run: |
+          aws cloudformation validate-template \
+            --template-body file://template.yaml
 
       # Pause and wait for manual approval
       - name: Manual Approval before Apply
