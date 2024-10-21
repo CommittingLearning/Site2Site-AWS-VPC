@@ -14,11 +14,6 @@ Parameters:
     Type: String
     Description: The IP Address range of this VPC
     Default: '192.168.0.0/16'
-
-  EC2SubnetName:
-    Type: String
-    Description: Name of the Subnet hosting the EC2 instance.
-    Default: EC2Subnet
   
   EC2SubnetCIDR:
     Type: String
@@ -54,7 +49,7 @@ Resources:
       AvailabilityZone: !Ref EC2SubnetAZ
       Tags:
         - Key: Name
-          Value: !Ref EC2SubnetName
+          Value: !Ref 'EC2Subnet_${Environment}'
         - Key: Environment
           Value: !Ref Environment
 
@@ -84,7 +79,7 @@ Resources:
       RouteTableId: !Ref RouteTable
 
 Outputs:
-  VpcId:
+  VPCId:
     Description: 'The ID of the created VPC'
     Value: !Ref MyVPC
   SubnetId:
