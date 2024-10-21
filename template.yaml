@@ -4,7 +4,7 @@ Description: CloudFormation template to create a VPC with one subnet for an EC2 
 Parameters:
   Environment:
     Type: String
-    Description: The environment name (e.g., development, production)
+    Description: "The environment name (e.g., development, production)"
     AllowedValues:
       - development
       - production
@@ -12,18 +12,22 @@ Parameters:
     
   VpcCIDR:
     Type: String
-    Description: The IP Address range of this VPC
+    Description: "The IP Address range of this VPC"
     Default: '192.168.0.0/16'
   
   EC2SubnetCIDR:
     Type: String
-    Description: The IP Address range of the subnet that hosts the EC2 instance.
+    Description: "The IP Address range of the subnet that hosts the EC2 instance."
     Default: '192.168.1.0/24'
 
   EC2SubnetAZ:
     Type: String
-    Description: Availability Zone of the EC2 Subnet.
+    Description: "Availability Zone of the EC2 Subnet"
     Default: 'us-west-2a'
+
+  VGWId:
+    Type: String
+    Description: "The ID of the VPN Gateway (Called from the parent stack upon deployment)"
 
 Resources:
   
@@ -68,7 +72,7 @@ Resources:
     Properties:
       RouteTableId: !Ref RouteTable
       DestinationCidrBlock: '0.0.0.0/0'
-      GatewayId: !Ref VGW
+      GatewayId: !Ref VGWId
 
   # Associate Route Table to the EC2 Subnet
   SubnetRouteTableAssociation:
