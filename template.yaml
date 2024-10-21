@@ -37,6 +37,8 @@ Resources:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
       Tags:
         - Key: Name
           Value: !Sub 'VPC_${Environment}'
@@ -56,6 +58,31 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  # Create a Route Table for the Subnet
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVPC
+      Tags:
+        - Key: Name
+          Value: !Sub 'RouteTable_${Environment}'
+
+  # Add a Route to the VPN Gateway
+  RouteToVGW:
+    Type: AWS::EC2::Route
+    DependsOn: VGW
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref VGW
+
+  # Associate Route Table to the EC2 Subnet
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref MySubnet
+      RouteTableId: !Ref RouteTable
+
 Outputs:
   VpcId:
     Description: 'The ID of the created VPC'
@@ -63,5 +90,3 @@ Outputs:
   SubnetId:
     Description: 'The ID of the created Subnet'
     Value: !Ref MySubnet
-
-# Try q
