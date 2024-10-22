@@ -25,10 +25,6 @@ Parameters:
     Description: "Availability Zone of the EC2 Subnet"
     Default: 'us-west-2a'
 
-  VGWId:
-    Type: String
-    Description: "The ID of the VPN Gateway (Called from the parent stack upon deployment)"
-
 Resources:
   
   #Create VPC with dynamic name based on the environment
