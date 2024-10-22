@@ -57,30 +57,6 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
-  # Create a Route Table for the Subnet
-  RouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref MyVPC
-      Tags:
-        - Key: Name
-          Value: !Sub 'RouteTable_${Environment}'
-
-  # Add a Route to the VPN Gateway
-  RouteToVGW:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref RouteTable
-      DestinationCidrBlock: '0.0.0.0/0'
-      GatewayId: !Ref VGWId
-
-  # Associate Route Table to the EC2 Subnet
-  SubnetRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref MySubnet
-      RouteTableId: !Ref RouteTable
-
 Outputs:
   VPCId:
     Description: 'The ID of the created VPC'
