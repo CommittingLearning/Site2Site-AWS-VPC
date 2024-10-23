@@ -66,10 +66,6 @@ Resources:
       VpcId: !Ref MyVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: '0.0.0.0/0'
-        - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
           CidrIp: '0.0.0.0/0'
@@ -83,37 +79,43 @@ Resources:
   VPCEndpointSSM:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
+      ServiceName: !Sub 'com.amazonaws.us-west-2.ssm'
       VpcId: !Ref MyVPC
       VpcEndpointType: Interface
       SubnetIds:
         - !Ref MySubnet
       SecurityGroupIds:
         - !Ref EC2SecurityGroup
-    DependsOn: MySubnet
+    DependsOn:
+      - MySubnet
+      - EC2SecurityGroup
 
   VPCEndpointEC2Messages:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2messages'
+      ServiceName: !Sub 'com.amazonaws.us-west-2.ec2messages'
       VpcId: !Ref MyVPC
       VpcEndpointType: Interface
       SubnetIds:
         - !Ref MySubnet
       SecurityGroupIds:
         - !Ref EC2SecurityGroup
-    DependsOn: MySubnet
+    DependsOn:
+      - MySubnet
+      - EC2SecurityGroup
 
   VPCEndpointSSMMessages:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssmmessages'
+      ServiceName: !Sub 'com.amazonaws.us-west-2.ssmmessages'
       VpcId: !Ref MyVPC
       SubnetIds:
         - !Ref MySubnet
       SecurityGroupIds:
         - !Ref EC2SecurityGroup
-    DependsOn: MySubnet
+    DependsOn:
+      - MySubnet
+      - EC2SecurityGroup
 
 Outputs:
   VPCId:
