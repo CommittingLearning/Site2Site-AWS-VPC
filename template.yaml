@@ -120,3 +120,6 @@ Outputs:
   SubnetId:
     Description: 'The ID of the created Subnet'
     Value: !Ref MySubnet
+  VPCCIDR:
+    Description: 'The CIDR range of the VPC'
+    Value: !Ref VpcCIDR
