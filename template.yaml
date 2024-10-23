@@ -57,6 +57,7 @@ Resources:
           Value: !Sub 'EC2Subnet_${Environment}'
         - Key: Environment
           Value: !Ref Environment
+    DependsOn: MyVPC
 
   EC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -89,6 +90,7 @@ Resources:
         - !Ref MySubnet
       SecurityGroupIds:
         - !Ref EC2SecurityGroup
+    DependsOn: MySubnet
 
   VPCEndpointEC2Messages:
     Type: AWS::EC2::VPCEndpoint
@@ -100,6 +102,7 @@ Resources:
         - !Ref MySubnet
       SecurityGroupIds:
         - !Ref EC2SecurityGroup
+    DependsOn: MySubnet
 
   VPCEndpointSSMMessages:
     Type: AWS::EC2::VPCEndpoint
@@ -110,6 +113,7 @@ Resources:
         - !Ref MySubnet
       SecurityGroupIds:
         - !Ref EC2SecurityGroup
+    DependsOn: MySubnet
 
 Outputs:
   VPCId:
