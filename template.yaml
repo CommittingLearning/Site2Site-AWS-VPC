@@ -25,7 +25,7 @@ Parameters:
     Description: "Availability Zone of the EC2 Subnet"
     Default: 'us-west-2a'
 
-  SGName:
+  EC2SGName:
     Type: String
     Description: "Name of the security group attached to the EC2 instance."
     Default: 'S2SEC2SG'
@@ -64,17 +64,23 @@ Resources:
     Properties:
       GroupDescription: "Security Group for EC2 instances"
       VpcId: !Ref MyVPC
-      SecurityGroupIngress:
-        - IpProtocol: -1
-          CidrIp: '0.0.0.0/0'       
       SecurityGroupEgress:
         - IpProtocol: tcp
-          FromPort: 443
           ToPort: 443
           CidrIp: '0.0.0.0/0'
       Tags:
         - Key: Name
-          Value: !Sub '${SGName}_${Environment}'
+          Value: !Sub '${EC2SGName}_${Environment}'
+
+  EndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Security Group for VPC Endpoints"
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          CidrIp: !Ref EC2SubnetCIDR
 
   VPCEndpointSSM:
     Type: AWS::EC2::VPCEndpoint
@@ -86,10 +92,10 @@ Resources:
       SubnetIds:
         - !Ref MySubnet
       SecurityGroupIds:
-        - !Ref EC2SecurityGroup
+        - !Ref EndpointSecurityGroup
     DependsOn:
       - MySubnet
-      - EC2SecurityGroup
+      - EndpointSecurityGroup
 
   VPCEndpointSSMMessages:
     Type: AWS::EC2::VPCEndpoint
@@ -101,24 +107,24 @@ Resources:
       SubnetIds:
         - !Ref MySubnet
       SecurityGroupIds:
-        - !Ref EC2SecurityGroup
+        - !Ref EndpointSecurityGroup
     DependsOn:
       - MySubnet
-      - EC2SecurityGroup
+      - EndpointSecurityGroup
 
   VPCEndpointEC2Messages:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       ServiceName: 
-        Fn::Sub: "ec2messages.${AWS::Region}.amazonaws.com"
+        Fn::Sub: "com.amazonaws.${AWS::Region}.ec2messages"
       VpcId: !Ref MyVPC
       SubnetIds:
         - !Ref MySubnet
       SecurityGroupIds:
-        - !Ref EC2SecurityGroup
+        - !Ref EndpointSecurityGroup
     DependsOn:
       - MySubnet
-      - EC2SecurityGroup
+      - EndpointSecurityGroup
 
 Outputs:
   VPCId:
@@ -127,6 +133,6 @@ Outputs:
   SubnetId:
     Description: 'The ID of the created Subnet'
     Value: !Ref MySubnet
-  SecurityGroupId:
+  EC2SecurityGroupId:
     Description: 'The ID of the EC2 Security Group'
     Value: !Ref EC2SecurityGroup
