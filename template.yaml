@@ -25,10 +25,10 @@ Parameters:
     Description: "Availability Zone of the EC2 Subnet"
     Default: 'us-west-2a'
 
-  EC2SGName:
+  EpSGName:
     Type: String
     Description: "Name of the security group attached to the EC2 instance."
-    Default: 'S2SEC2SG'
+    Default: 'S2SEpSG'
 
 Resources:
   
@@ -59,19 +59,6 @@ Resources:
           Value: !Ref Environment
     DependsOn: MyVPC
 
-  EC2SecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: "Security Group for EC2 instances"
-      VpcId: !Ref MyVPC
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          ToPort: 443
-          CidrIp: '0.0.0.0/0'
-      Tags:
-        - Key: Name
-          Value: !Sub '${EC2SGName}_${Environment}'
-
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -81,6 +68,9 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           CidrIp: !Ref EC2SubnetCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub '${EpSGName}_${Environment}'
 
   VPCEndpointSSM:
     Type: AWS::EC2::VPCEndpoint
@@ -118,6 +108,7 @@ Resources:
       ServiceName: 
         Fn::Sub: "com.amazonaws.${AWS::Region}.ec2messages"
       VpcId: !Ref MyVPC
+      VpcEndpointType: Interface
       SubnetIds:
         - !Ref MySubnet
       SecurityGroupIds:
@@ -133,6 +124,3 @@ Outputs:
   SubnetId:
     Description: 'The ID of the created Subnet'
     Value: !Ref MySubnet
-  EC2SecurityGroupId:
-    Description: 'The ID of the EC2 Security Group'
-    Value: !Ref EC2SecurityGroup
