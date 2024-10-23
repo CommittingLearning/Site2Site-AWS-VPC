@@ -25,6 +25,11 @@ Parameters:
     Description: "Availability Zone of the EC2 Subnet"
     Default: 'us-west-2a'
 
+  SGName:
+    Type: String
+    Description: "Name of the security group attached to the EC2 instance."
+    Default: 'S2SEC2SG'
+
 Resources:
   
   #Create VPC with dynamic name based on the environment
@@ -53,6 +58,59 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Security Group for EC2 instances"
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: '0.0.0.0/0'
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: '0.0.0.0/0'
+      Tags:
+        - Key: Name
+          Value: !Sub '${SGName}_${Environment}'
+
+  VPCEndpointSSM:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
+      VpcId: !Ref MyVPC
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref MySubnet
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+
+  VPCEndpointEC2Messages:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2messages'
+      VpcId: !Ref MyVPC
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref MySubnet
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+
+  VPCEndpointSSMMessages:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssmmessages'
+      VpcId: !Ref MyVPC
+      SubnetIds:
+        - !Ref MySubnet
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+
 Outputs:
   VPCId:
     Description: 'The ID of the created VPC'
@@ -60,3 +118,6 @@ Outputs:
   SubnetId:
     Description: 'The ID of the created Subnet'
     Value: !Ref MySubnet
+  SecurityGroupId:
+    Description: 'The ID of the EC2 Security Group'
+    Value: !Ref EC2SecurityGroup
