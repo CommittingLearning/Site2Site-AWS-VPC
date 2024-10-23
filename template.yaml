@@ -67,10 +67,12 @@ Resources:
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 443
+          ToPort: -1
           CidrIp: !Ref EC2SubnetCIDR
       Tags:
         - Key: Name
           Value: !Sub '${EpSGName}_${Environment}'
+    DependsOn: MySubnet
 
   VPCEndpointSSM:
     Type: AWS::EC2::VPCEndpoint
@@ -84,7 +86,6 @@ Resources:
       SecurityGroupIds:
         - !Ref EndpointSecurityGroup
     DependsOn:
-      - MySubnet
       - EndpointSecurityGroup
 
   VPCEndpointSSMMessages:
@@ -99,7 +100,6 @@ Resources:
       SecurityGroupIds:
         - !Ref EndpointSecurityGroup
     DependsOn:
-      - MySubnet
       - EndpointSecurityGroup
 
   VPCEndpointEC2Messages:
@@ -114,7 +114,6 @@ Resources:
       SecurityGroupIds:
         - !Ref EndpointSecurityGroup
     DependsOn:
-      - MySubnet
       - EndpointSecurityGroup
 
 Outputs:
