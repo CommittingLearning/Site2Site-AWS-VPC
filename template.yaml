@@ -68,7 +68,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          CidrIp: !Ref EC2SubnetCIDR
+          CidrIp: !Ref VpcCIDR
       Tags:
         - Key: Name
           Value: !Sub '${EpSGName}_${Environment}'
@@ -77,8 +77,7 @@ Resources:
   VPCEndpointSSM:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName:
-        Fn::Sub: "com.amazonaws.${AWS::Region}.ssm"
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
       VpcId: !Ref MyVPC
       VpcEndpointType: Interface
       SubnetIds:
@@ -91,8 +90,7 @@ Resources:
   VPCEndpointSSMMessages:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName:
-        Fn::Sub: "com.amazonaws.${AWS::Region}.ssmmessages"
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
       VpcId: !Ref MyVPC
       VpcEndpointType: Interface
       SubnetIds:
@@ -105,8 +103,7 @@ Resources:
   VPCEndpointEC2Messages:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName: 
-        Fn::Sub: "com.amazonaws.${AWS::Region}.ec2messages"
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2messages"
       VpcId: !Ref MyVPC
       VpcEndpointType: Interface
       SubnetIds:
