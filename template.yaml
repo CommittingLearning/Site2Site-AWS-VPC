@@ -79,7 +79,13 @@ Resources:
   VPCEndpointSSM:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
+      ServiceName:
+        Fn::Join:
+          - ""
+          -
+            - "com.amazonaws."
+            - !Ref AWS::Region
+            - ".ssm"
       VpcId: !Ref MyVPC
       VpcEndpointType: Interface
       SubnetIds:
@@ -93,7 +99,13 @@ Resources:
   VPCEndpointSSMMessages:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssmmessages'
+      ServiceName:
+        Fn::Join:
+          - ""
+          -
+            - "com.amazonaws."
+            - !Ref AWS::Region
+            - ".ssmmessages"
       VpcId: !Ref MyVPC
       VpcEndpointType: Interface
       SubnetIds:
@@ -107,7 +119,13 @@ Resources:
   VPCEndpointEC2Messages:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2messages'
+      ServiceName:
+        Fn::Join:
+          - ""
+          -
+            - "com.amazonaws."
+            - !Ref AWS::Region
+            - ".ec2messages"
       VpcId: !Ref MyVPC
       SubnetIds:
         - !Ref MySubnet
