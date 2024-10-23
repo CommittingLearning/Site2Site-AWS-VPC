@@ -78,7 +78,7 @@ Resources:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       ServiceName:
-        Fn::Sub: "com.amazonaws.${AWS::Region}.ec2messages"
+        Fn::Sub: "com.amazonaws.${AWS::Region}.ssm"
       VpcId: !Ref MyVPC
       VpcEndpointType: Interface
       SubnetIds:
