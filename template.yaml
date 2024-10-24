@@ -80,6 +80,7 @@ Resources:
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
       VpcId: !Ref MyVPC
       VpcEndpointType: Interface
+      PrivateDnsEnabled: true
       SubnetIds:
         - !Ref MySubnet
       SecurityGroupIds:
@@ -93,6 +94,7 @@ Resources:
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
       VpcId: !Ref MyVPC
       VpcEndpointType: Interface
+      PrivateDnsEnabled: true
       SubnetIds:
         - !Ref MySubnet
       SecurityGroupIds:
@@ -106,6 +108,7 @@ Resources:
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2messages"
       VpcId: !Ref MyVPC
       VpcEndpointType: Interface
+      PrivateDnsEnabled: true
       SubnetIds:
         - !Ref MySubnet
       SecurityGroupIds:
