@@ -32,7 +32,7 @@ Parameters:
 
 Resources:
   
-  #Create VPC with dynamic name based on the environment
+  # Create VPC with dynamic name based on the environment
   MyVPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -45,7 +45,7 @@ Resources:
         - Key: Environment
           Value: !Ref Environment 
 
-  # Create a Subnet inside the VPC
+  # Create a Subnet inside the VPC for the EC2 instance
   MySubnet:
     Type: AWS::EC2::Subnet
     Properties:
@@ -59,6 +59,7 @@ Resources:
           Value: !Ref Environment
     DependsOn: MyVPC
 
+  # Security Group for the VPC Endpoints
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -74,6 +75,7 @@ Resources:
           Value: !Sub '${EpSGName}_${Environment}'
     DependsOn: MySubnet
 
+  # Creating a VPC Endpoint for SSM
   VPCEndpointSSM:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -88,6 +90,7 @@ Resources:
     DependsOn:
       - EndpointSecurityGroup
 
+  # Creating a VPC Endpoint for SSM Messages
   VPCEndpointSSMMessages:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -102,6 +105,7 @@ Resources:
     DependsOn:
       - EndpointSecurityGroup
 
+  # Creating a VPC Endpoint for EC2 Messages
   VPCEndpointEC2Messages:
     Type: AWS::EC2::VPCEndpoint
     Properties:
