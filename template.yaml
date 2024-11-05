@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create a VPC with one subnet for an EC2 instance, named based on the environment.
+
+Parameters:
+  Environment:
+    Type: String
+    Description: "The environment name (e.g., development, production)"
+    AllowedValues:
+      - development
+      - production
+      - default
+    
+  VpcCIDR:
+    Type: String
+    Description: "The IP Address range of this VPC"
+    Default: '192.168.0.0/16'
+  
+  EC2SubnetCIDR:
+    Type: String
+    Description: "The IP Address range of the subnet that hosts the EC2 instance."
+    Default: '192.168.1.0/24'
+
+  EC2SubnetAZ:
+    Type: String
+    Description: "Availability Zone of the EC2 Subnet"
+    Default: 'us-west-2a'
+
+  EpSGName:
+    Type: String
+    Description: "Name of the security group attached to the EC2 instance."
+    Default: 'S2SEpSG'
+
+Resources:
+  
+  # Create VPC with dynamic name based on the environment
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'VPC_${Environment}'
+        - Key: Environment
+          Value: !Ref Environment 
+
+  # Create a Subnet inside the VPC for the EC2 instance
+  MySubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: !Ref EC2SubnetCIDR
+      AvailabilityZone: !Ref EC2SubnetAZ
+      Tags:
+        - Key: Name
+          Value: !Sub 'EC2Subnet_${Environment}'
+        - Key: Environment
+          Value: !Ref Environment
+    DependsOn: MyVPC
+
+  # Security Group for the VPC Endpoints
+  EndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Security Group for VPC Endpoints"
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref VpcCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub '${EpSGName}_${Environment}'
+    DependsOn: MySubnet
+
+  # Creating a VPC Endpoint for SSM
+  VPCEndpointSSM:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+      VpcId: !Ref MyVPC
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: true
+      SubnetIds:
+        - !Ref MySubnet
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup
+    DependsOn:
+      - EndpointSecurityGroup
+
+  # Creating a VPC Endpoint for SSM Messages
+  VPCEndpointSSMMessages:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
+      VpcId: !Ref MyVPC
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: true
+      SubnetIds:
+        - !Ref MySubnet
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup
+    DependsOn:
+      - EndpointSecurityGroup
+
+  # Creating a VPC Endpoint for EC2 Messages
+  VPCEndpointEC2Messages:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2messages"
+      VpcId: !Ref MyVPC
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: true
+      SubnetIds:
+        - !Ref MySubnet
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup
+    DependsOn:
+      - EndpointSecurityGroup
+
+Outputs:
+  VPCId:
+    Description: 'The ID of the created VPC'
+    Value: !Ref MyVPC
+  SubnetId:
+    Description: 'The ID of the created Subnet'
+    Value: !Ref MySubnet
+  VPCCIDR:
+    Description: 'The CIDR range of the VPC'
+    Value: !Ref VpcCIDR
